@@ -1,14 +1,14 @@
 use bevy::{
-    ecs::query::WorldQuery,
+    ecs::query::{QueryData, WorldQuery},
     prelude::*,
     render::camera::RenderTarget,
     time::Time,
     ui::{CalculatedClip, Node, UiStack},
     window::{PrimaryWindow, Window, WindowRef},
 };
-use polako_constructivism::{Construct, Get, Singleton};
-use polako_constructivism::derive_construct;
 use polako_constructivism::bridge::ReadOnly;
+use polako_constructivism::derive_construct;
+use polako_constructivism::{Construct, Get, Singleton};
 
 pub struct PolakoInputPlugin;
 
@@ -108,7 +108,7 @@ pub enum PointerFilter {
     Block,
 }
 
-impl ReadOnly for PointerInput { }
+impl ReadOnly for PointerInput {}
 
 derive_construct! {
     seq => PointerInput -> Nothing;
@@ -143,8 +143,8 @@ pub enum ActivePointerFilter {
     Block,
 }
 
-#[derive(WorldQuery)]
-#[world_query(mutable)]
+#[derive(QueryData)]
+#[query_data(mutable)]
 pub struct PointerQuery {
     entity: Entity,
     node: &'static Node,
@@ -182,10 +182,10 @@ pub fn bypass_filter_system(
 // it emit PointerEvent with associated entities and data.
 pub fn pointer_input_system(
     mut state: Local<PointerSystemState>,
-    camera: Query<(&Camera, Option<&UiCameraConfig>)>,
+    camera: Query<(&Camera, &ViewVisibility)>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
     windows: Query<&Window, Without<PrimaryWindow>>,
-    mouse_button_input: Res<Input<MouseButton>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
     touches_input: Res<Touches>,
     ui_stack: Res<UiStack>,
     time: Res<Time>,
@@ -197,12 +197,11 @@ pub fn pointer_input_system(
     let down =
         mouse_button_input.just_pressed(MouseButton::Left) || touches_input.any_just_pressed();
 
-    let is_ui_disabled =
-        |camera_ui| matches!(camera_ui, Some(&UiCameraConfig { show_ui: false, .. }));
+    let is_ui_disabled = |camera_ui: &ViewVisibility| camera_ui.get();
 
     let cursor_position = camera
         .iter()
-        .filter(|(_, camera_ui)| !is_ui_disabled(*camera_ui))
+        .filter(|(_, camera_ui)| !is_ui_disabled(camera_ui))
         .filter_map(|(camera, _)| {
             if let RenderTarget::Window(window_ref) = camera.target {
                 Some(window_ref)
