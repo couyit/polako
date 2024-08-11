@@ -225,7 +225,6 @@ impl WithText for Text {
 }
 
 /// bypass Div.background to BackgroundColor.0 when changed
-/// and Div.padding to Style.padding
 fn div_system(mut colors: Query<(&Div, &mut BackgroundColor), Changed<Div>>) {
     colors.iter_mut().for_each(|(div, mut bg)| {
         bg.0 = div.bg;
