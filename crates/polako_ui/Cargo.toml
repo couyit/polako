@@ -12,3 +12,6 @@ peniko = "0.1.1"
 taffy = "0.3.18"
 vello = "0.2.0"
 polako_channel = { path = "../polako_channel" }
+polako_constructivism = { path = "../polako_constructivism" }
+polako_eml = { path = "../polako_eml" }
+polako_flow = { path = "../polako_flow" }

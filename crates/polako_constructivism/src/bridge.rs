@@ -23,7 +23,7 @@ impl TextProps for Text {
         if let Some(section) = self.sections.first() {
             section.value.clone()
         } else {
-            format!("")
+            "".to_string()
         }
     }
     fn set_text(&mut self, text: impl Into<String>) {
@@ -37,7 +37,7 @@ impl TextProps for Text {
 }
 derive_segment! {
     seg => Text;
-    construct => (text: String = format!("")) -> {
+    construct => (text: String = "".to_string()) -> {
         Text::from_section(text, TextStyle::default())
     };
     props => {
@@ -139,6 +139,67 @@ derive_construct! {
         a: f32 = [a, set_a];
         /// Hex representation Color
         hex: String = [get_hex, set_hex];
+    };
+}
+
+trait BorderRadiusProps {
+    fn top_left(&self) -> Val;
+    fn set_top_left(&mut self, value: Val);
+
+    fn top_right(&self) -> Val;
+    fn set_top_right(&mut self, value: Val);
+
+    fn bottom_left(&self) -> Val;
+    fn set_bottom_left(&mut self, value: Val);
+
+    fn bottom_right(&self) -> Val;
+    fn set_bottom_right(&mut self, value: Val);
+}
+
+impl BorderRadiusProps for BorderRadius {
+    fn top_left(&self) -> Val {
+        self.top_left
+    }
+
+    fn set_top_left(&mut self, value: Val) {
+        self.top_left = value;
+    }
+
+    fn top_right(&self) -> Val {
+        self.top_right
+    }
+
+    fn set_top_right(&mut self, value: Val) {
+        self.top_right = value;
+    }
+
+    fn bottom_left(&self) -> Val {
+        self.bottom_left
+    }
+
+    fn set_bottom_left(&mut self, value: Val) {
+        self.bottom_left = value;
+    }
+
+    fn bottom_right(&self) -> Val {
+        self.bottom_right
+    }
+
+    fn set_bottom_right(&mut self, value: Val) {
+        self.bottom_right = value;
+    }
+}
+
+derive_construct! {
+    seq => BorderRadius -> Nothing;
+    construct => (top_left: Val, top_right: Val, bottom_left: Val, bottom_right: Val) -> {
+        BorderRadius::new(top_left, top_right, bottom_left, bottom_right)
+    };
+    props => {
+        top_left: Val = [top_left, set_top_left];
+        top_right: Val = [top_right, set_top_right];
+        bottom_left: Val = [bottom_left, set_bottom_left];
+        bottom_right: Val = [bottom_right, set_bottom_right];
     };
 }
 
