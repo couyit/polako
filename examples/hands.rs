@@ -6,8 +6,7 @@ use polako::flow::*;
 // move mouse around the center of the screen and see logs
 fn example(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.add(
-        eml! {
+    commands.add(eml! {
         resource(time, Time);
         Body [
             Column {
@@ -39,8 +38,7 @@ fn example(mut commands: Commands) {
                 elapsed: Label { .text: "0.00" },
             ]
         ]
-    }
-    );
+    });
 }
 
 #[derive(Signal)]

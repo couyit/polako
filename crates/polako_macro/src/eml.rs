@@ -42,7 +42,7 @@ impl ParamsExt for Params<Variant> {
         }
         for arg in self.items.iter() {
             let ident = &arg.ident;
-            let value = Variant::build(&arg.value, ctx.clone())?;
+            let value = Variant::build(&arg.value, ctx)?;
             // let value = Variant::build(, ctx)?;
             body = quote! { #body
                 __component__.#ident = #value.into();
@@ -543,7 +543,7 @@ impl EmlComponent {
     pub fn build(&self, ctx: Ref<EmlContext>, this: &TokenStream) -> syn::Result<TokenStream> {
         let construct = self
             .items
-            .build_construct(ctx.clone(), &self.ident, false)?;
+            .build_construct(ctx, &self.ident, false)?;
         let cst = ctx.path("constructivism");
         Ok(quote! {
             world.entity_mut(#this).insert(#cst::Flattern::flattern(#construct));
@@ -730,9 +730,9 @@ impl EmlRoot {
     ) -> syn::Result<TokenStream> {
         let eml = &ctx.path("eml");
         let cst = &ctx.path("constructivism");
-        let build_content = content.build(ctx.clone(), tag)?;
-        let apply_patches = overrides.build_patch(ctx.clone(), tag, &quote! { __root__ }, false)?;
-        let apply_mixins = mixins.build(ctx.clone(), &quote! { __root__ })?;
+        let build_content = content.build(ctx, tag)?;
+        let apply_patches = overrides.build_patch(ctx, tag, &quote! { __root__ }, false)?;
+        let apply_mixins = mixins.build(ctx, &quote! { __root__ })?;
 
         Ok(quote! {
             let __root_model__ = #eml::EntityMark::<#tag>::new(__root__);
@@ -793,8 +793,8 @@ impl EmlNode {
     pub fn build(&self, ctx: Ref<EmlContext>, as_root: bool) -> syn::Result<TokenStream> {
         let tag = &self.tag;
         let eml = &ctx.path("eml");
-        let content = self.children.build(ctx.clone(), tag)?;
-        let construct = self.args.build_construct(ctx.clone(), tag)?;
+        let content = self.children.build(ctx, tag)?;
+        let construct = self.args.build_construct(ctx, tag)?;
         let model = if let Some(model) = &self.model {
             quote! {{
                 world.entity_mut(#model.entity).insert(#eml::IntoBundle::into_bundle(#construct));
@@ -813,7 +813,7 @@ impl EmlNode {
         };
         let apply_mixins = self
             .mixins
-            .build(ctx.clone(), &quote! { __model__.entity })?;
+            .build(ctx, &quote! { __model__.entity })?;
         let apply_extensions = self
             .args
             .build_extensions(ctx, tag, &quote! { &mut __entity__ })?;

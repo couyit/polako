@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use polako::eml::*;
 use polako::flow::*;
+use polako_ui::common::{CommonWidgetsPlugin, Div};
 
 fn main() {
     App::new()
@@ -14,9 +15,9 @@ fn main() {
             ..default()
         }))
         .add_plugins(FlowPlugin)
+        .add_plugins(CommonWidgetsPlugin)
         .add_systems(Startup, hello_world)
         .add_systems(Update, ui_text_system)
-        .add_systems(Update, div_system)
         .run();
 }
 
@@ -28,8 +29,8 @@ fn hello_world(mut commands: Commands) {
         bind(time.elapsed * 0.5 - 0.5 => content.bg.r);
         bind(content.bg.hex => color.text);
         Body + Name { .value: "body" } [
-            content: Column { .bg: #9d9d9dff, .s.padding: [25, 50] }[
-                Div { .bg: #dededeff, .s.padding: 50 } [
+            content: Column { .bg: #9d9d9dff, } + Style( .padding: [25, 50].into_rect(), )[
+                Div { .bg: #dededeff, } + Style ( .padding: 50.into_rect(), ) [
                     "Hello world!"
                 ],
                 Row [
@@ -41,23 +42,6 @@ fn hello_world(mut commands: Commands) {
             ]
         ]
     });
-}
-
-#[derive(Element)]
-#[construct(Div -> Empty)]
-pub struct Div {
-    #[prop(construct)]
-    /// The background color of element
-    bg: Color,
-}
-impl ElementBuilder for Div {
-    fn build_element(content: Vec<Entity>) -> Blueprint<Self> {
-        blueprint! {
-            Div::Base
-            + NodeBundle
-            [[ content ]]
-        }
-    }
 }
 
 #[derive(Behavior)]
@@ -136,62 +120,13 @@ impl ElementBuilder for Row {
     }
 }
 
-use bevy::ecs::world::EntityWorldMut;
-use polako_constructivism::Is;
 use polako_constructivism::Singleton;
-impl DivDesign {
-    // Div can accept string literals as content
-    pub fn push_text<'c, S: AsRef<str>>(
-        &self,
-        world: &mut World,
-        content: &'c mut Vec<Entity>,
-        text: S,
-    ) -> Implemented {
-        let entity = world.spawn(TextBundle::with_text(text)).id();
-        content.push(entity);
-        Implemented
-    }
-    // Only Div and elements based on Div can be content of the Div
-    pub fn push_content<E: Element + Is<Div>>(
-        &self,
-        _: &mut World,
-        content: &mut Vec<Entity>,
-        model: EntityMark<E>,
-    ) -> Implemented {
-        content.push(model.entity);
-        Implemented
-    }
-    /// Everything based on Div can access the styles using param extensions: `Row { .s.padding: 25 }`
-    pub fn s(&self) -> &'static Styles {
-        &Styles
-    }
-}
-
 use polako_flow::input::HoverSignal;
 use polako_flow::Signal;
 pub struct Signals;
 impl Signals {
     pub fn hover(&self) -> &'static <HoverSignal as Signal>::Descriptor {
         <<HoverSignal as Signal>::Descriptor as Singleton>::instance()
-    }
-}
-pub struct Styles;
-impl Styles {
-    /// The amount of space between the edges of a node and its contents in pixels.
-    pub fn padding<T: IntoRect>(&self) -> StyleProperty<T> {
-        StyleProperty(|entity, padding| {
-            let rect = padding.into_rect();
-            if !entity.contains::<Style>() {
-                entity.insert(Style::default());
-            }
-            entity.get_mut::<Style>().unwrap().padding = rect;
-        })
-    }
-}
-pub struct StyleProperty<T>(fn(&mut EntityWorldMut, T));
-impl<T> StyleProperty<T> {
-    pub fn assign<'w>(&self, entity: &mut EntityWorldMut<'w>, value: T) {
-        (self.0)(entity, value)
     }
 }
 
@@ -207,14 +142,7 @@ impl Default for UiText {
 pub trait WithText {
     fn with_text<T: AsRef<str>>(text: T) -> Self;
 }
-impl WithText for TextBundle {
-    fn with_text<T: AsRef<str>>(text: T) -> TextBundle {
-        let mut text = TextBundle::from_section(text.as_ref(), Default::default());
-        text.text.sections[0].style.font_size = 24.;
-        text.text.sections[0].style.color = Color::Srgba(Srgba::hex("2f2f2fff").unwrap());
-        text
-    }
-}
+
 impl WithText for Text {
     fn with_text<T: AsRef<str>>(text: T) -> Self {
         let mut text = Text::from_section(text.as_ref().to_string(), Default::default());
@@ -222,13 +150,6 @@ impl WithText for Text {
         text.sections[0].style.color = Color::Srgba(Srgba::hex("2f2f2fff").unwrap());
         text
     }
-}
-
-/// bypass Div.background to BackgroundColor.0 when changed
-fn div_system(mut colors: Query<(&Div, &mut BackgroundColor), Changed<Div>>) {
-    colors.iter_mut().for_each(|(div, mut bg)| {
-        bg.0 = div.bg;
-    });
 }
 
 /// bypass UiText text value & color to Text.sections[0] when changed

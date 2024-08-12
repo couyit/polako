@@ -1,3 +1,6 @@
+pub mod common;
+pub mod input;
+
 use bevy::{ecs::{component::Component, entity::{Entities, Entity}, query::{Changed, Or, QueryData, With, Without}, removal_detection::RemovedComponents, system::{Commands, Local, Query, Res, ResMut, Resource}}, hierarchy::{Children, Parent}, log::warn, math::Vec2, prelude::{Deref, DerefMut}, utils::{HashMap, HashSet}, window::{PrimaryWindow, Window}};
 use polako_channel::Channel;
 // use taffy::
